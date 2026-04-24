@@ -66,7 +66,7 @@ build/navmesh_dump
 build/navmesh_export_json
 build/navmesh_query_demo
 build/navigation_load_by_name_demo
-/mnt/d/u3d/Bin/lib/libnavigation.so
+/mnt/d/u3d/navigation/Bin/lib/libnavigation.so
 ```
 
 如果是调试构建，产物路径仍然在 `build/` 下，只是编译参数会切换为 `Debug + -O0 + -g`：
@@ -82,7 +82,7 @@ build/navmesh_dump
 build/navmesh_export_json
 build/navmesh_query_demo
 build/navigation_load_by_name_demo
-/mnt/d/u3d/Bin/lib/libnavigation.so
+/mnt/d/u3d/navigation/Bin/lib/libnavigation.so
 ```
 
 这些产物的用途分别是：
@@ -127,7 +127,7 @@ build/navigation_load_by_name_demo
   用来按场景名验证运行时加载链路。
   默认会尝试加载当前仓库中的 `res/101_nav.navmesh`。
 
-- `/mnt/d/u3d/Bin/lib/libnavigation.so`
+- `/mnt/d/u3d/navigation/Bin/lib/libnavigation.so`
   这是当前工程真正的导航运行时库。
   上层程序如果要接入这个导航系统，主要依赖的就是这个库。
 
@@ -219,7 +219,7 @@ cmake --build build -j4
 - `build/navmesh_export_json`
 - `build/navmesh_query_demo`
 - `build/navigation_load_by_name_demo`
-- `/mnt/d/u3d/Bin/lib/libnavigation.so`
+- `/mnt/d/u3d/navigation/Bin/lib/libnavigation.so`
 
 ### 3.3 用于断点调试的 Debug 构建
 
@@ -310,28 +310,30 @@ sed -n '1,120p' build/CMakeFiles/navigation.dir/flags.make
 
 ### 4.2 导航库
 
-导航库默认输出到仓库外的路径：
+导航库默认输出到仓库内的路径：
 
 ```text
-../../Bin/lib
+Bin/lib
 ```
 
 在当前工作区下实际展开为：
 
 ```text
-/mnt/d/u3d/Bin/lib/libnavigation.so
+/mnt/d/u3d/navigation/Bin/lib/libnavigation.so
 ```
 
-这个行为来自 [CMakeLists.txt](/mnt/d/u3d/navigation/CMakeLists.txt:5)：
+这个行为来自 [CMakeLists.txt](/mnt/d/u3d/navigation/CMakeLists.txt:20)：
 
 ```cmake
-SET(LIBRARY_OUTPUT_PATH ../../Bin/lib)
+set(NAVIGATION_LIB_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Bin/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${NAVIGATION_LIB_OUTPUT_DIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${NAVIGATION_LIB_OUTPUT_DIR}")
 ```
 
 这意味着：
 
 - 在本机正常开发环境里通常没有问题
-- 在受限沙箱、只读目录、CI 隔离环境里，可能在最后链接阶段失败
+- 如果仓库目录本身不可写，可能在最后链接阶段失败
 
 这个库的作用是：
 
@@ -386,27 +388,30 @@ cmake --build build -j4
 典型表现：
 
 ```text
-/usr/bin/ld: cannot open output file /mnt/d/u3d/Bin/lib/libnavigation.so: Read-only file system
+/usr/bin/ld: cannot open output file /mnt/d/u3d/navigation/Bin/lib/libnavigation.so: Read-only file system
 ```
 
 这不是源码编译错误，而是输出目录不可写。
 
 原因：
 
-- 当前 CMake 把库输出路径固定到了仓库外的 `../../Bin/lib`
+- 当前 CMake 把库输出路径固定到仓库内的 `Bin/lib`
+- 如果 `navigation/Bin/lib` 不可创建或不可写，链接器无法写入 `libnavigation.so`
 
 处理方式：
 
-- 在正常可写环境下直接构建
-- 或者修改 [CMakeLists.txt](/mnt/d/u3d/navigation/CMakeLists.txt:5)，把库输出目录改到仓库内
+- 确认当前仓库目录可写
+- 或者修改 [CMakeLists.txt](/mnt/d/u3d/navigation/CMakeLists.txt:20)，把库输出目录改到其他可写位置
 
 例如可以改成类似：
 
 ```cmake
-SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+set(NAVIGATION_LIB_OUTPUT_DIR "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${NAVIGATION_LIB_OUTPUT_DIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${NAVIGATION_LIB_OUTPUT_DIR}")
 ```
 
-如果后续要做大版本升级，建议顺手把这个路径改掉，避免构建系统耦合外部目录结构。
+如果后续要做大版本升级，建议继续使用基于变量的绝对路径，避免构建结果受执行目录影响。
 
 ### 6.3 旧代码在新编译器上的弃用警告
 

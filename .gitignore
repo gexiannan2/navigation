@@ -3,6 +3,7 @@
 # Build outputs
 /build/
 /build_*/
+/Bin/
 
 # CMake and binary artifacts
 *.o

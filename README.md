@@ -107,7 +107,7 @@ cmake --build build -j4
 - `build/grid_map_demo`
 - `build/navigation_load_by_name_demo`
 
-Linux 下同时会在仓库外层约定路径生成 `libnavigation.so`。
+Linux 下同时会在仓库内约定路径生成 `libnavigation.so`。
 
 ## 示例工作流
 
