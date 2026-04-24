@@ -19,7 +19,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "navigation_mesh_handle.h"	
-#include "navigation/navigation.h"
+#include "navigation.h"
 #include "resmgr/resmgr.h"
 //#include "thread/threadguard.h"
 #include "math/lmath.h"
@@ -65,8 +65,8 @@ std::vector<std::string> collectNavmeshPaths(const std::string& name)
 
 	// Simple direct paths for local testing.
 	appendNavmeshPathIfExists(paths, "res/" + name + ".navmesh");
-	appendNavmeshPathIfExists(paths, "D:/navigation/res/" + name + ".navmesh");
-	appendNavmeshPathIfExists(paths, "/mnt/d/navigation/res/" + name + ".navmesh");
+	appendNavmeshPathIfExists(paths, "D:/e996_navmesh/res/" + name + ".navmesh");
+	appendNavmeshPathIfExists(paths, "/mnt/d/e996_navmesh/res/" + name + ".navmesh");
 
 	// When a repo-local test file is present, use it directly and avoid
 	// depending on external KBEngine resource path discovery.

@@ -56,16 +56,16 @@ and off-mesh connections.
 先重新生成并编译当前工程：
 
 ```bash
-cmake -S /mnt/d/navigation -B /mnt/d/navigation/build_current
-cmake --build /mnt/d/navigation/build_current --parallel
+cmake -S /mnt/d/e996_navmesh -B /mnt/d/e996_navmesh/build_current
+cmake --build /mnt/d/e996_navmesh/build_current --parallel
 ```
 
 如果只想单独编某个工具，例如：
 
 ```bash
-cmake --build /mnt/d/navigation/build_current --target navmesh_bake_from_obj --parallel
-cmake --build /mnt/d/navigation/build_current --target navmesh_query_demo --parallel
-cmake --build /mnt/d/navigation/build_current --target navmesh_export_json --parallel
+cmake --build /mnt/d/e996_navmesh/build_current --target navmesh_bake_from_obj --parallel
+cmake --build /mnt/d/e996_navmesh/build_current --target navmesh_query_demo --parallel
+cmake --build /mnt/d/e996_navmesh/build_current --target navmesh_export_json --parallel
 ```
 
 ## Typical Flow
@@ -84,10 +84,10 @@ cmake --build /mnt/d/navigation/build_current --target navmesh_export_json --par
 ### 1. Bake from OBJ
 
 ```bash
-/mnt/d/navigation/build_current/navmesh_bake_from_obj \
+/mnt/d/e996_navmesh/build_current/navmesh_bake_from_obj \
   /mnt/c/Users/admin/Downloads/101.obj \
-  /mnt/d/navigation/output_101_navmesh/101_formal.navmesh \
-  /mnt/d/navigation/output_101_navmesh/101_formal.svg
+  /mnt/d/e996_navmesh/output_101_navmesh/101_formal.navmesh \
+  /mnt/d/e996_navmesh/output_101_navmesh/101_formal.svg
 ```
 
 输出：
@@ -98,8 +98,8 @@ cmake --build /mnt/d/navigation/build_current --target navmesh_export_json --par
 ### 2. Dump Binary Header Info
 
 ```bash
-/mnt/d/navigation/build_current/navmesh_dump \
-  /mnt/d/navigation/output_101_navmesh/101_formal.navmesh
+/mnt/d/e996_navmesh/build_current/navmesh_dump \
+  /mnt/d/e996_navmesh/output_101_navmesh/101_formal.navmesh
 ```
 
 这个工具适合快速确认：
@@ -115,8 +115,8 @@ cmake --build /mnt/d/navigation/build_current --target navmesh_export_json --par
 ### 3. Run Runtime Query Demo
 
 ```bash
-/mnt/d/navigation/build_current/navmesh_query_demo \
-  /mnt/d/navigation/output_101_navmesh/101_formal.navmesh
+/mnt/d/e996_navmesh/build_current/navmesh_query_demo \
+  /mnt/d/e996_navmesh/output_101_navmesh/101_formal.navmesh
 ```
 
 这个工具会直接在当前 `.navmesh` 上跑：
@@ -131,9 +131,9 @@ cmake --build /mnt/d/navigation/build_current --target navmesh_export_json --par
 ### 4. Export Polygon JSON
 
 ```bash
-/mnt/d/navigation/build_current/navmesh_export_json \
-  /mnt/d/navigation/output_101_navmesh/101_formal.navmesh \
-  /mnt/d/navigation/output_101_navmesh/101_polygons.json
+/mnt/d/e996_navmesh/build_current/navmesh_export_json \
+  /mnt/d/e996_navmesh/output_101_navmesh/101_formal.navmesh \
+  /mnt/d/e996_navmesh/output_101_navmesh/101_polygons.json
 ```
 
 输出的 `json` 里包含：
@@ -158,7 +158,7 @@ cmake --build /mnt/d/navigation/build_current --target navmesh_export_json --par
 - 如果要看结构化文本，优先用 `navmesh_export_json`。
 - 如果要看运行时查询是否正常，优先用 `navmesh_query_demo`。
 - 生成产物不要放 `/tmp`，建议放在工程目录下，例如：
-  - `/mnt/d/navigation/output_101_navmesh/`
+  - `/mnt/d/e996_navmesh/output_101_navmesh/`
 
 ## `101.obj` -> navmesh 详细流程
 
@@ -607,8 +607,8 @@ OBJ -> solid -> chf -> cset -> pmesh -> dmesh -> dtNavMeshCreateParams
 运行时按名字加载时，走的是 `Navigation::loadNavigation(name)` -> `NavMeshHandle::create(name)` 这条链路。对本仓库本地调试来说，`NavMeshHandle` 会优先尝试：
 
 - `res/<name>.navmesh`
-- `D:/navigation/res/<name>.navmesh`
-- `/mnt/d/navigation/res/<name>.navmesh`
+- `D:/e996_navmesh/res/<name>.navmesh`
+- `/mnt/d/e996_navmesh/res/<name>.navmesh`
 
 所以如果你希望运行：
 

@@ -26,7 +26,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <queue>
 
-#include "navigation/navigation.h"
+#include "navigation.h"
 #include "resmgr/resmgr.h"
 
 namespace KBEngine{
