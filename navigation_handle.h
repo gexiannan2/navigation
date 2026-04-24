@@ -38,9 +38,7 @@ public:
 	enum NAV_TYPE
 	{
 		NAV_UNKNOWN = 0,
-		NAV_MESH = 1,
-		NAV_TILE = 2,
-		NAV_GRID = 3
+		NAV_MESH = 1
 	};
 
 	enum NAV_OBJECT_STATE

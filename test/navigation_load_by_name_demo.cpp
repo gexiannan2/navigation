@@ -21,10 +21,6 @@ const char* navTypeToString(KBEngine::NavigationHandle::NAV_TYPE type)
 	{
 	case KBEngine::NavigationHandle::NAV_MESH:
 		return "NAV_MESH";
-	case KBEngine::NavigationHandle::NAV_TILE:
-		return "NAV_TILE";
-	case KBEngine::NavigationHandle::NAV_GRID:
-		return "NAV_GRID";
 	default:
 		return "NAV_UNKNOWN";
 	}

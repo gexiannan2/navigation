@@ -177,7 +177,7 @@ bool Resmgr::initialize()
 	{
 		printf("[ERROR] Resmgr::initialize: not set environment, (KBE_ROOT, KBE_RES_PATH, KBE_BIN_PATH) invalid!\n");
 #if KBE_PLATFORM == PLATFORM_WIN32
-		::MessageBox(0, L"Resmgr::initialize: not set environment, (KBE_ROOT, KBE_RES_PATH, KBE_BIN_PATH) invalid!\n", L"ERROR", MB_ICONERROR);
+		::MessageBoxW(0, L"Resmgr::initialize: not set environment, (KBE_ROOT, KBE_RES_PATH, KBE_BIN_PATH) invalid!\n", L"ERROR", MB_ICONERROR);
 #endif
 	}
 
@@ -359,11 +359,11 @@ bool Resmgr::listPathRes(std::wstring path, const std::wstring& extendName, std:
 
 #else
 	wchar_t szFind[MAX_PATH];
-	WIN32_FIND_DATA FindFileData;
+	WIN32_FIND_DATAW FindFileData;
 	wcscpy(szFind, path.c_str());
 	wcscat(szFind, L"*");
 	
-	HANDLE hFind = FindFirstFile(szFind, &FindFileData);
+	HANDLE hFind = FindFirstFileW(szFind, &FindFileData);
 	if(INVALID_HANDLE_VALUE == hFind)
 	{
 		char* cstr = strutil::wchar2char(path.c_str());
@@ -412,7 +412,7 @@ bool Resmgr::listPathRes(std::wstring path, const std::wstring& extendName, std:
 			}
 		}
 
-		if(!FindNextFile(hFind, &FindFileData))
+		if(!FindNextFileW(hFind, &FindFileData))
 			break;
 	}
 

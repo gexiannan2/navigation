@@ -267,7 +267,7 @@ int NavMeshHandle::raycast(int layer, const Position3D& start, const Position3D&
 	}
 	
 	float fPara = 1.0;
-	if (-0.0001 <hitNormal[1] < 0.0001)
+	if (hitNormal[1] > -0.0001f && hitNormal[1] < 0.0001f)
 	{
 		hitPoint[0] += fPara*hitNormal[0];
 		hitPoint[1] += fPara*hitNormal[1];
@@ -381,7 +381,7 @@ int NavMeshHandle::raycastNear(int layer, const Position3D& start, const Positio
 		}
 	}
 	float fPara = 1.0;
-	if (-0.0001 < hitNormal[1] < 0.0001)
+	if (hitNormal[1] > -0.0001f && hitNormal[1] < 0.0001f)
 	{
 		hitPoint[0] += fPara*hitNormal[0];
 		hitPoint[1] += fPara*hitNormal[1];

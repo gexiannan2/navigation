@@ -4,23 +4,29 @@ project(navigation)
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
-if(NOT CMAKE_C_FLAGS_DEBUG MATCHES "(^| )-O[0-3s]($| )")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0" CACHE STRING "C debug flags" FORCE)
+if(CMAKE_BUILD_TYPE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
-if(NOT CMAKE_C_FLAGS_DEBUG MATCHES "(^| )-g($| )")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g" CACHE STRING "C debug flags" FORCE)
-endif()
-if(NOT CMAKE_CXX_FLAGS_DEBUG MATCHES "(^| )-O[0-3s]($| )")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0" CACHE STRING "CXX debug flags" FORCE)
-endif()
-if(NOT CMAKE_CXX_FLAGS_DEBUG MATCHES "(^| )-g($| )")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g" CACHE STRING "CXX debug flags" FORCE)
+if(NOT MSVC)
+    if(NOT CMAKE_C_FLAGS_DEBUG MATCHES "(^| )-O[0-3s]($| )")
+        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0" CACHE STRING "C debug flags" FORCE)
+    endif()
+    if(NOT CMAKE_C_FLAGS_DEBUG MATCHES "(^| )-g($| )")
+        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g" CACHE STRING "C debug flags" FORCE)
+    endif()
+    if(NOT CMAKE_CXX_FLAGS_DEBUG MATCHES "(^| )-O[0-3s]($| )")
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0" CACHE STRING "CXX debug flags" FORCE)
+    endif()
+    if(NOT CMAKE_CXX_FLAGS_DEBUG MATCHES "(^| )-g($| )")
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g" CACHE STRING "CXX debug flags" FORCE)
+    endif()
 endif()
 set(NAVIGATION_LIB_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Bin/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${NAVIGATION_LIB_OUTPUT_DIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${NAVIGATION_LIB_OUTPUT_DIR}")
-add_definitions(-g)
+if(NOT MSVC)
+    add_definitions(-g)
+endif()
 
 set(NAVIGATION_ROOT_SRCS
     DetourAlloc.cpp
@@ -40,7 +46,6 @@ set(NAVIGATION_ROOT_SRCS
     DetourTileCacheBuilder.cpp
     navmesh_baker.cpp
     navigation.cpp
-    navigation_grid_handle.cpp
     navigation_handle.cpp
     navigation_mesh_handle.cpp
     Recast.cpp
@@ -88,8 +93,6 @@ target_include_directories(navigation PRIVATE ${NAVIGATION_INCLUDE_DIRS})
 
 add_executable(navmesh_dump tools/navmesh_dump.cpp)
 target_include_directories(navmesh_dump PRIVATE .)
-
-add_executable(grid_map_demo tools/grid_map_demo.cpp)
 
 add_executable(navmesh_bake_from_obj tools/navmesh_bake_from_obj.cpp)
 target_include_directories(navmesh_bake_from_obj PRIVATE .)

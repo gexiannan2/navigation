@@ -22,7 +22,6 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include "resmgr/resmgr.h"
 //#include "thread/threadguard.h"
 
-#include "navigation_grid_handle.h"
 #include "navigation_mesh_handle.h"
 
 namespace KBEngine{
@@ -69,12 +68,6 @@ NavigationHandlePtr Navigation::findNavigation(std::string name)
 		{
 			return iter->second;
 		}
-		else if(iter->second->type() == NavigationHandle::NAV_GRID)
-		{
-			NavGridHandle* pNavGridHandle = new NavGridHandle(*(KBEngine::NavGridHandle*)iter->second.get());
-			return NavigationHandlePtr(pNavGridHandle);
-		}
-
 		return iter->second;
 	}
 

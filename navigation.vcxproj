@@ -134,7 +134,6 @@
     <ClCompile Include="navigation.cpp" />
     <ClCompile Include="navigation_handle.cpp" />
     <ClCompile Include="navigation_mesh_handle.cpp" />
-    <ClCompile Include="navigation_tile_handle.cpp" />
     <ClCompile Include="Recast.cpp" />
     <ClCompile Include="RecastAlloc.cpp" />
     <ClCompile Include="RecastArea.cpp" />
@@ -166,7 +165,6 @@
     <ClInclude Include="navigation.h" />
     <ClInclude Include="navigation_handle.h" />
     <ClInclude Include="navigation_mesh_handle.h" />
-    <ClInclude Include="navigation_tile_handle.h" />
     <ClInclude Include="Recast.h" />
     <ClInclude Include="RecastAlloc.h" />
     <ClInclude Include="RecastAssert.h" />

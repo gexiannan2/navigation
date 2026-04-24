@@ -65,9 +65,6 @@
     <ClCompile Include="navigation_mesh_handle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="navigation_tile_handle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Recast.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -155,9 +152,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="navigation_mesh_handle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="navigation_tile_handle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Recast.h">
