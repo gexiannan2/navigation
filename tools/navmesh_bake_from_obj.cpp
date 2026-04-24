@@ -144,7 +144,7 @@ void printUsage(const char* argv0)
 {
 	std::cout
 		<< "Usage: " << argv0 << " <input.obj> <output.navmesh> [output.svg] [options]\n"
-		<< "Builds navmesh with u3d/navigation Recast/Detour sources, writes wrapped .navmesh,\n"
+		<< "Builds navmesh with navigation Recast/Detour sources, writes wrapped .navmesh,\n"
 		<< "and optionally exports a top-down SVG.\n"
 		<< "Options:\n"
 		<< "  --cell-size <float>\n"

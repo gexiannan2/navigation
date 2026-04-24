@@ -1,8 +1,8 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-set -euo pipefail
+set -eu
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 BUILD_DIR="${1:-build}"
 JOBS="${JOBS:-4}"
 
@@ -10,7 +10,7 @@ echo "Project root: ${ROOT_DIR}"
 echo "Build dir: ${BUILD_DIR}"
 echo "Jobs: ${JOBS}"
 
-cmake -S "${ROOT_DIR}" -B "${ROOT_DIR}/${BUILD_DIR}"
+cmake --fresh -S "${ROOT_DIR}" -B "${ROOT_DIR}/${BUILD_DIR}"
 cmake --build "${ROOT_DIR}/${BUILD_DIR}" -j"${JOBS}"
 
 echo

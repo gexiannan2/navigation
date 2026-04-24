@@ -65,8 +65,8 @@ std::vector<std::string> collectNavmeshPaths(const std::string& name)
 
 	// Simple direct paths for local testing.
 	appendNavmeshPathIfExists(paths, "res/" + name + ".navmesh");
-	appendNavmeshPathIfExists(paths, "D:/u3d/navigation/res/" + name + ".navmesh");
-	appendNavmeshPathIfExists(paths, "/mnt/d/u3d/navigation/res/" + name + ".navmesh");
+	appendNavmeshPathIfExists(paths, "D:/navigation/res/" + name + ".navmesh");
+	appendNavmeshPathIfExists(paths, "/mnt/d/navigation/res/" + name + ".navmesh");
 
 	// When a repo-local test file is present, use it directly and avoid
 	// depending on external KBEngine resource path discovery.

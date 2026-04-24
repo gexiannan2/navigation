@@ -15,7 +15,7 @@
 当前工程默认使用 `Debug` 构建，方便直接进入 VS Code / `gdb` 调试。如果只想快速构建当前工程，直接执行：
 
 ```bash
-cd /mnt/d/u3d/navigation
+cd /mnt/d/navigation
 cmake -S . -B build
 cmake --build build -j4
 ```
@@ -23,7 +23,7 @@ cmake --build build -j4
 如果要确保断点行为最稳定，建议清理一次 `build/`，再显式指定 `Debug + -O0`：
 
 ```bash
-cd /mnt/d/u3d/navigation
+cd /mnt/d/navigation
 rm -rf build
 cmake -S . -B build \
   -DCMAKE_BUILD_TYPE=Debug \
@@ -66,7 +66,7 @@ build/navmesh_dump
 build/navmesh_export_json
 build/navmesh_query_demo
 build/navigation_load_by_name_demo
-/mnt/d/u3d/navigation/Bin/lib/libnavigation.so
+/mnt/d/navigation/Bin/lib/libnavigation.so
 ```
 
 如果是调试构建，产物路径仍然在 `build/` 下，只是编译参数会切换为 `Debug + -O0 + -g`：
@@ -82,7 +82,7 @@ build/navmesh_dump
 build/navmesh_export_json
 build/navmesh_query_demo
 build/navigation_load_by_name_demo
-/mnt/d/u3d/navigation/Bin/lib/libnavigation.so
+/mnt/d/navigation/Bin/lib/libnavigation.so
 ```
 
 这些产物的用途分别是：
@@ -127,7 +127,7 @@ build/navigation_load_by_name_demo
   用来按场景名验证运行时加载链路。
   默认会尝试加载当前仓库中的 `res/101_nav.navmesh`。
 
-- `/mnt/d/u3d/navigation/Bin/lib/libnavigation.so`
+- `/mnt/d/navigation/Bin/lib/libnavigation.so`
   这是当前工程真正的导航运行时库。
   上层程序如果要接入这个导航系统，主要依赖的就是这个库。
 
@@ -168,7 +168,7 @@ build/navigation_load_by_name_demo
 - Linux 下 `navigation` 默认构建为共享库 `libnavigation.so`
 - Windows 下 `navigation` 默认构建为静态库
 
-对应逻辑见 [CMakeLists.txt](/mnt/d/u3d/navigation/CMakeLists.txt:84)。
+对应逻辑见 [CMakeLists.txt](/d:/navigation/CMakeLists.txt#L84)。
 
 ## 2. 构建前置条件
 
@@ -202,7 +202,7 @@ build/navigation_load_by_name_demo
 ### 3.1 在仓库根目录执行
 
 ```bash
-cd /mnt/d/u3d/navigation
+cd /mnt/d/navigation
 cmake -S . -B build
 cmake --build build -j4
 ```
@@ -219,14 +219,14 @@ cmake --build build -j4
 - `build/navmesh_export_json`
 - `build/navmesh_query_demo`
 - `build/navigation_load_by_name_demo`
-- `/mnt/d/u3d/navigation/Bin/lib/libnavigation.so`
+- `/mnt/d/navigation/Bin/lib/libnavigation.so`
 
 ### 3.3 用于断点调试的 Debug 构建
 
 如果目标是进入 `main`、在 `Navigation::loadNavigation()` 里单步，或者排查“某一行打不上断点”的问题，推荐直接把 `build/` 目录切成调试构建：
 
 ```bash
-cd /mnt/d/u3d/navigation
+cd /mnt/d/navigation
 rm -rf build
 cmake -S . -B build \
   -DCMAKE_BUILD_TYPE=Debug \
@@ -249,7 +249,7 @@ cmake --build build -j4
 
 ### 3.4 当前默认行为
 
-当前 [CMakeLists.txt](/mnt/d/u3d/navigation/CMakeLists.txt:4) 已经改成“未显式指定时默认使用 `Debug`”。另外，`Debug` 配置还会额外附加 `-O0 -g`，让断点和单步更稳定。
+当前 [CMakeLists.txt](/d:/navigation/CMakeLists.txt#L4) 已经改成“未显式指定时默认使用 `Debug`”。另外，`Debug` 配置还会额外附加 `-O0 -g`，让断点和单步更稳定。
 
 如果你想确认当前 `build/` 目录确实已经是调试参数，可以检查：
 
@@ -319,10 +319,10 @@ Bin/lib
 在当前工作区下实际展开为：
 
 ```text
-/mnt/d/u3d/navigation/Bin/lib/libnavigation.so
+/mnt/d/navigation/Bin/lib/libnavigation.so
 ```
 
-这个行为来自 [CMakeLists.txt](/mnt/d/u3d/navigation/CMakeLists.txt:20)：
+这个行为来自 [CMakeLists.txt](/d:/navigation/CMakeLists.txt#L20)：
 
 ```cmake
 set(NAVIGATION_LIB_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Bin/lib")
@@ -359,7 +359,7 @@ cmake -S . -B build
 ```text
 -- Configuring done
 -- Generating done
--- Build files have been written to: /mnt/d/u3d/navigation/build
+-- Build files have been written to: /mnt/d/navigation/build
 ```
 
 ### 5.2 编译阶段
@@ -388,7 +388,7 @@ cmake --build build -j4
 典型表现：
 
 ```text
-/usr/bin/ld: cannot open output file /mnt/d/u3d/navigation/Bin/lib/libnavigation.so: Read-only file system
+/usr/bin/ld: cannot open output file /mnt/d/navigation/Bin/lib/libnavigation.so: Read-only file system
 ```
 
 这不是源码编译错误，而是输出目录不可写。
@@ -401,7 +401,7 @@ cmake --build build -j4
 处理方式：
 
 - 确认当前仓库目录可写
-- 或者修改 [CMakeLists.txt](/mnt/d/u3d/navigation/CMakeLists.txt:20)，把库输出目录改到其他可写位置
+- 或者修改 [CMakeLists.txt](/d:/navigation/CMakeLists.txt#L20)，把库输出目录改到其他可写位置
 
 例如可以改成类似：
 
