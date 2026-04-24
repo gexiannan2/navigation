@@ -1,0 +1,96 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug navigation_load_by_name_demo",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/navigation_load_by_name_demo",
+            "args": [
+                "101_nav",
+                "119.11",
+                "4.15472",
+                "24.4367",
+                "175.11",
+                "10.5147",
+                "357.017",
+                "output_101_navmesh/101_nav_path.txt"
+            ],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        },
+        {
+            "name": "Debug navigation_load_by_name_demo (prompt args)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/navigation_load_by_name_demo",
+            "args": [
+                "${command:pickArgs}"
+            ],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        },
+        {
+            "name": "Debug navmesh_bake_from_obj (101 preset)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/navmesh_bake_from_obj",
+            "args": [
+                "./101.obj",
+                "output_101_navmesh/101_web_like.navmesh",
+                "output_101_navmesh/101_web_like.svg",
+                "--cell-size",
+                "0.2",
+                "--cell-height",
+                "0.1",
+                "--agent-height",
+                "2.0",
+                "--agent-radius",
+                "0",
+                "--agent-max-climb",
+                "1.2",
+                "--agent-max-slope",
+                "50",
+                "--region-min-size",
+                "4",
+                "--region-merge-size",
+                "12",
+                "--edge-max-len",
+                "12",
+                "--edge-max-error",
+                "1.1",
+                "--verts-per-poly",
+                "6",
+                "--detail-sample-dist",
+                "4",
+                "--detail-sample-max-error",
+                "0.8"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        },
+        {
+            "name": "Debug navmesh_bake_from_obj (prompt args)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/navmesh_bake_from_obj",
+            "args": [
+                "${command:pickArgs}"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        }
+    ]
+}

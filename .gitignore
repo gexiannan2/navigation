@@ -1,0 +1,20 @@
+.codex
+
+# Build outputs
+/build/
+/build_*/
+
+# CMake and binary artifacts
+*.o
+*.a
+*.so
+*.dll
+*.dylib
+*.exe
+
+# IDE user files
+*.suo
+*.user
+
+# OS files
+.DS_Store
