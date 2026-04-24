@@ -176,7 +176,7 @@ build/navigation_load_by_name_demo
 
 推荐准备以下工具：
 
-- `cmake >= 3.5`
+- `cmake >= 3.28`
 - `g++` 或 `clang++`
 - `make` 或 `ninja`
 

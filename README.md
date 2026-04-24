@@ -81,7 +81,7 @@
 
 推荐环境：
 
-- `cmake >= 3.10`
+- `cmake >= 3.28`
 - `g++` 或 `clang++`
 - `make` 或 `ninja`
 
