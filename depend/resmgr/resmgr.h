@@ -45,7 +45,7 @@ public:
 	// 引擎环境变量
 	struct KBEEnv
 	{
-		std::string root;
+		std::string root_path;
 		std::string res_path;
 		std::string bin_path;
 	};
@@ -114,6 +114,10 @@ public:
 	*/
 	std::string getPyUserScriptsPath();
 
+	std::string getPyUserComponentScriptsPath(COMPONENT_TYPE componentType = UNKNOWN_COMPONENT_TYPE);
+
+	std::string getPyUserAssetsPath();
+
 	ResourceObjectPtr openResource(const char* res, const char* model, 
 		uint32 flags = RESOURCE_NORMAL);
 
@@ -131,9 +135,12 @@ private:
 
 	KBEUnordered_map< std::string, ResourceObjectPtr > respool_;
 
-//	KBEngine::thread::ThreadMutex mutex_;
+	KBEngine::thread::ThreadMutex mutex_;
 };
 
 }
 
 #endif // KBE_RESMGR_H
+
+
+

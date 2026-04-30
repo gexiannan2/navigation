@@ -1,28 +1,10 @@
-/*
-This source file is part of KBEngine
-For the latest info, see http://www.kbengine.org/
-
-Copyright (c) 2008-2016 KBEngine.
-
-KBEngine is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-KBEngine is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
- 
-You should have received a copy of the GNU Lesser General Public License
-along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Copyright 2008-2018 Yolo Technologies, Inc. All Rights Reserved. https://www.comblockengine.com
 
 #ifndef KBE_NAVIGATEHANDLE_H
 #define KBE_NAVIGATEHANDLE_H
 
 #include "common/common.h"
-//#include "helper/debug_helper.h"
+
 #include "common/smartpointer.h"
 #include "common/singleton.h"
 #include "math/lmath.h"
@@ -43,11 +25,12 @@ public:
 
 	enum NAV_OBJECT_STATE
 	{
-		NAV_OBJECT_STATE_MOVING = 1,	// ï¿½Æ¶ï¿½ï¿½ï¿½
-		NAV_OBJECT_STATE_MOVEOVER = 2,	// ï¿½Æ¶ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		NAV_OBJECT_STATE_MOVING = 1,	// ÒÆ¶¯ÖÐ
+		NAV_OBJECT_STATE_MOVEOVER = 2,	// ÒÆ¶¯ÒÑ¾­½áÊøÁË
 	};
 
-	NavigationHandle():name()
+	NavigationHandle():
+	resPath()
 	{
 	}
 
@@ -58,17 +41,19 @@ public:
 	virtual NavigationHandle::NAV_TYPE type() const{ return NAV_UNKNOWN; }
 
 	virtual int findStraightPath(int layer, const Position3D& start, const Position3D& end, std::vector<Position3D>& paths) = 0;
+
+	virtual int findRandomPointAroundCircle(int layer, const Position3D& centerPos,
+		std::vector<Position3D>& points, uint32 max_points, float maxRadius) = 0;
+
 	virtual int raycast(int layer, const Position3D& start, const Position3D& end, std::vector<Position3D>& hitPointVec) = 0;
-	virtual int raycastNear(int layer, const Position3D& start, const Position3D& end, std::vector<Position3D>& hitPointVec) = 0;
-	virtual int raycastAlong(int layer, const Position3D& start, const Position3D& end, std::vector<Position3D>& hitPointVec) = 0;
-	virtual int GetHeight(const Position3D& start, float*h, int layer = 0) = 0;
-	virtual int Intersects(int layer, const Position3D& start, const Position3D& end, std::vector<Position3D>& hitPointVec) = 0;
-	virtual int GetNearPos(const Position3D& start, Position3D& end, int layer = 0) = 0;
-	std::string name;
+
+	std::string resPath;
 };
 
 typedef SmartPointer<NavigationHandle> NavigationHandlePtr;
 
 }
 #endif // KBE_NAVIGATEHANDLE_H
+
+
 

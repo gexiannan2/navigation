@@ -17,3 +17,12 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include "common/common.h"
+
+namespace KBEngine
+{
+GAME_TIME g_kbetime = 0;
+COMPONENT_TYPE g_componentType = UNKNOWN_COMPONENT_TYPE;
+COMPONENT_ID g_componentID = 0;
+}

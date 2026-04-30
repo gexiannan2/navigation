@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+﻿cmake_minimum_required(VERSION 3.28)
 project(navigation)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -90,6 +90,9 @@ ELSE()
 ENDIF()
 
 target_include_directories(navigation PRIVATE ${NAVIGATION_INCLUDE_DIRS})
+if(MSVC)
+    target_compile_definitions(navigation PRIVATE UNICODE _UNICODE)
+endif()
 
 add_executable(navmesh_dump tools/navmesh_dump.cpp)
 target_include_directories(navmesh_dump PRIVATE .)
@@ -125,3 +128,4 @@ target_link_libraries(navmesh_export_obj PRIVATE navigation)
 add_executable(navigation_load_by_name_demo test/navigation_load_by_name_demo.cpp)
 target_include_directories(navigation_load_by_name_demo PRIVATE ${NAVIGATION_INCLUDE_DIRS})
 target_link_libraries(navigation_load_by_name_demo PRIVATE navigation)
+

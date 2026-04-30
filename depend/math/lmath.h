@@ -1,22 +1,4 @@
-/*
-This source file is part of KBEngine
-For the latest info, see http://www.kbengine.org/
-
-Copyright (c) 2008-2016 KBEngine.
-
-KBEngine is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-KBEngine is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
- 
-You should have received a copy of the GNU Lesser General Public License
-along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Copyright 2008-2018 Yolo Technologies, Inc. All Rights Reserved. https://www.comblockengine.com
 
 
 #ifndef KBE_MATH_H
@@ -42,6 +24,7 @@ typedef D3DXVECTOR3								Vector3;
 typedef D3DXVECTOR4								Vector4;
 
 #define KBE_PI									D3DX_PI
+#define KBE_2PI									KBE_PI * 2
 #define KBE_DegreeToRadian						D3DXToRadian
 #define KBE_RadianToDegree						D3DXToDegree
 	
@@ -109,6 +92,7 @@ typedef G3D::Vector3							Vector3;
 typedef G3D::Vector4							Vector4;
 
 #define KBE_PI									3.1415926535898
+#define KBE_2PI									6.2831853071796
 #define KBE_DegreeToRadian						G3D::toRadians
 #define KBE_RadianToDegree						G3D::toRadians
 	
@@ -164,33 +148,41 @@ inline float KBEVec3CalcVec2Length(const Vector3& v1, const Vector3& v2)
 	return sqrt(x*x + z*z);
 }
 
-inline float int82angle(int8 angle, bool half = false)
+inline float int82angle(KBEngine::int8 angle, bool half = false)
 {
 	return float(angle) * float((KBE_PI / (half ? 254.f : 128.f)));
 }
 
-inline int8 angle2int8(float v, bool half = false)
+inline KBEngine::int8 angle2int8(float v, bool half = false)
 {
-	int8 angle = 0;
+	KBEngine::int8 angle = 0;
 	if(!half)
 	{
-		angle = (int8)floorf((v * 128.f) / float(KBE_PI) + 0.5f);
+		angle = (KBEngine::int8)floorf((v * 128.f) / float(KBE_PI) + 0.5f);
 	}
 	else
 	{
-		angle = (int8)KBEClamp(floorf( (v * 254.f) / float(KBE_PI) + 0.5f ), -128.f, 127.f );
+		angle = (KBEngine::int8)KBEClamp(floorf( (v * 254.f) / float(KBE_PI) + 0.5f ), -128.f, 127.f );
 	}
 
 	return angle;
 }
 
-typedef Vector3													Position3D;												// 表示3D位置变量类型																						// mailbox 所投递的mail类别的类别
+typedef Vector3													Position3D;												// 表示3D位置变量类型	
+typedef KBEShared_ptr< std::vector<Position3D> >				VECTOR_POS3D_PTR;										// 指向Position3D数组的智能指针类型声明
 
 struct Direction3D																										// 表示方向位置变量类型
 {
 	Direction3D():dir(0.f, 0.f, 0.f) {};
 	Direction3D(const Vector3 & v):dir(v){}
 	Direction3D(float r, float p, float y):dir(r, p, y){}
+	Direction3D(const Direction3D & v) :dir(v.dir){}
+
+	Direction3D& operator=(const Direction3D& v)
+	{
+		dir = v.dir;
+		return *this;
+	}
 
 	float roll() const{ return dir.x; }		
 	float pitch() const{ return dir.y; }		

@@ -1,26 +1,9 @@
-/*
-This source file is part of KBEngine
-For the latest info, see http://www.kbengine.org/
-
-Copyright (c) 2008-2016 KBEngine.
-
-KBEngine is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-KBEngine is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
- 
-You should have received a copy of the GNU Lesser General Public License
-along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Copyright 2008-2018 Yolo Technologies, Inc. All Rights Reserved. https://www.comblockengine.com
 
 #include "navigation.h"
 #include "resmgr/resmgr.h"
-//#include "thread/threadguard.h"
+
+
 
 #include "navigation_mesh_handle.h"
 
@@ -29,28 +12,36 @@ namespace KBEngine{
 KBE_SINGLETON_INIT(Navigation);
 
 //-------------------------------------------------------------------------------------
-Navigation::Navigation()
+Navigation::Navigation():
+navhandles_(),
+mutex_()
 {
-	navhandles_.clear();
 }
 
 //-------------------------------------------------------------------------------------
 Navigation::~Navigation()
 {
+	finalise();
+}
+
+//-------------------------------------------------------------------------------------
+void Navigation::finalise()
+{
+	KBEngine::thread::ThreadGuard tg(&mutex_);
 	navhandles_.clear();
 }
 
 //-------------------------------------------------------------------------------------
-bool Navigation::removeNavigation(std::string name)
+bool Navigation::removeNavigation(std::string resPath)
 {
-//	KBEngine::thread::ThreadGuard tg(&mutex_); 
-	KBEUnordered_map<std::string, NavigationHandlePtr>::iterator iter = navhandles_.find(name);
-	if(navhandles_.find(name) != navhandles_.end())
+	KBEngine::thread::ThreadGuard tg(&mutex_); 
+	KBEUnordered_map<std::string, NavigationHandlePtr>::iterator iter = navhandles_.find(resPath);
+	if(navhandles_.find(resPath) != navhandles_.end())
 	{
-		//iter->second->decRef();
+		iter->second->decRef();
 		navhandles_.erase(iter);
 
-		//DEBUG_MSG(fmt::format("Navigation::removeNavigation: ({}) is destroyed!\n", name));
+		DEBUG_MSG(fmt::format("Navigation::removeNavigation: ({}) is destroyed!\n", resPath));
 		return true;
 	}
 
@@ -58,16 +49,15 @@ bool Navigation::removeNavigation(std::string name)
 }
 
 //-------------------------------------------------------------------------------------
-NavigationHandlePtr Navigation::findNavigation(std::string name)
+NavigationHandlePtr Navigation::findNavigation(std::string resPath)
 {
-//	KBEngine::thread::ThreadGuard tg(&mutex_); 
-	KBEUnordered_map<std::string, NavigationHandlePtr>::iterator iter = navhandles_.find(name);
-	if(navhandles_.find(name) != navhandles_.end())
+	KBEngine::thread::ThreadGuard tg(&mutex_); 
+	KBEUnordered_map<std::string, NavigationHandlePtr>::iterator iter = navhandles_.find(resPath);
+	if(navhandles_.find(resPath) != navhandles_.end())
 	{
-		if(iter->second->type() == NavigationHandle::NAV_MESH)
-		{
-			return iter->second;
-		}
+		if(iter->second == NULL)
+			return NULL;
+
 		return iter->second;
 	}
 
@@ -75,36 +65,54 @@ NavigationHandlePtr Navigation::findNavigation(std::string name)
 }
 
 //-------------------------------------------------------------------------------------
-bool Navigation::hasNavigation(std::string name)
+bool Navigation::hasNavigation(std::string resPath)
 {
-//	KBEngine::thread::ThreadGuard tg(&mutex_); 
-	return navhandles_.find(name) != navhandles_.end();
+	KBEngine::thread::ThreadGuard tg(&mutex_); 
+	return navhandles_.find(resPath) != navhandles_.end();
 }
 
 //-------------------------------------------------------------------------------------
-NavigationHandlePtr Navigation::loadNavigation(std::string name)
+NavigationHandlePtr Navigation::loadNavigation(std::string resPath, const std::map< int, std::string >& params)
 {
-//	KBEngine::thread::ThreadGuard tg(&mutex_); 
-	if(name == "")
-	{
-		return nullptr;		
-	}
-
-	KBEUnordered_map<std::string, NavigationHandlePtr>::iterator iter = navhandles_.find(name);
+	KBEngine::thread::ThreadGuard tg(&mutex_); 
+	if(resPath == "")
+		return NULL;
+	
+	KBEUnordered_map<std::string, NavigationHandlePtr>::iterator iter = navhandles_.find(resPath);
 	if(iter != navhandles_.end())
 	{
 		return iter->second;
 	}
 
 	NavigationHandle* pNavigationHandle_ = NULL;
-	pNavigationHandle_ = NavMeshHandle::create(name);
 
-	if(pNavigationHandle_ == NULL)
+	std::string path = resPath;
+	path = Resmgr::getSingleton().matchPath(path);
+	if(path.size() == 0)
 		return NULL;
+		
+	wchar_t* wpath = strutil::char2wchar(path.c_str());
+	std::wstring wspath = wpath;
+	free(wpath);
 
-	navhandles_[name] = NavigationHandlePtr(pNavigationHandle_);
+	std::vector<std::wstring> results;
+	Resmgr::getSingleton().listPathRes(wspath, L"navmesh", results);
+
+	if(results.size() == 0)
+	{
+		return NULL;
+	}
+
+	pNavigationHandle_ = NavMeshHandle::create(resPath, params);
+
+
+	navhandles_[resPath] = NavigationHandlePtr(pNavigationHandle_);
 	return pNavigationHandle_;
 }
 
 //-------------------------------------------------------------------------------------		
 }
+
+
+
+

@@ -1,26 +1,8 @@
-/*
-This source file is part of KBEngine
-For the latest info, see http://www.kbengine.org/
-
-Copyright (c) 2008-2016 KBEngine.
-
-KBEngine is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-KBEngine is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
- 
-You should have received a copy of the GNU Lesser General Public License
-along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Copyright 2008-2018 Yolo Technologies, Inc. All Rights Reserved. https://www.comblockengine.com
 
 #ifndef KBE_PLATFORM_H
 #define KBE_PLATFORM_H
-#include "../../PIGlobalType.h"
+
 // common include	
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +26,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <cctype>
 #include <iterator>
-#include "strutil.h"
+#include "common/strutil.h"
 // windows include	
 #if defined( __WIN32__ ) || defined( WIN32 ) || defined( _WIN32 )
 #pragma warning(disable:4996)
@@ -53,6 +35,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(disable:4217)
 #include <io.h>
 #include <time.h> 
+#include <chrono>
 //#define FD_SETSIZE 1024
 #ifndef WIN32_LEAN_AND_MEAN 
 #include <winsock2.h>		// 必须在windows.h之前包含， 否则网络模块编译会出错
@@ -105,6 +88,7 @@ along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
 #define SIGQUIT 3
 #define SIGUSR1 10
 #define SIGPIPE 13
+#define SIGCHLD 17
 #define SIGSYS	32
 #endif
 
@@ -125,14 +109,14 @@ namespace KBEngine
 
 
 // current platform and compiler
-#define PLATFORM_WIN32 0
-#define PLATFORM_UNIX  1
-#define PLATFORM_APPLE 2
+#define PLATFORM_WIN32			0
+#define PLATFORM_UNIX			1
+#define PLATFORM_APPLE			2
 
-#define UNIX_FLAVOUR_LINUX 1
-#define UNIX_FLAVOUR_BSD 2
-#define UNIX_FLAVOUR_OTHER 3
-#define UNIX_FLAVOUR_OSX 4
+#define UNIX_FLAVOUR_LINUX		1
+#define UNIX_FLAVOUR_BSD		2
+#define UNIX_FLAVOUR_OTHER		3
+#define UNIX_FLAVOUR_OSX		4
 
 #if defined( __WIN32__ ) || defined( WIN32 ) || defined( _WIN32 )
 #  define KBE_PLATFORM PLATFORM_WIN32
@@ -197,6 +181,12 @@ namespace KBEngine
 #endif
 #endif
 
+#ifndef X64
+#if defined( _WIN64 ) || defined( __x86_64__ ) || defined( __amd64 ) || defined( __LP64__ )
+#define X64
+#endif
+#endif
+
 #ifdef X64
 #define KBE_ARCH "X64"
 #else
@@ -228,14 +218,14 @@ typedef unsigned long											ulong;
 
 /* Use correct types for x64 platforms, too */
 #if KBE_COMPILER != COMPILER_GNU
-//typedef signed __int64											int64;
-//typedef signed __int32											int32;
-//typedef signed __int16											int16;
-//typedef signed __int8											int8;
-//typedef unsigned __int64										uint64;
-//typedef unsigned __int32										uint32;
-//typedef unsigned __int16										uint16;
-//typedef unsigned __int8											uint8;
+typedef signed __int64											int64;
+typedef signed __int32											int32;
+typedef signed __int16											int16;
+typedef signed __int8											int8;
+typedef unsigned __int64										uint64;
+typedef unsigned __int32										uint32;
+typedef unsigned __int16										uint16;
+typedef unsigned __int8											uint8;
 typedef INT_PTR													intptr;
 typedef UINT_PTR        										uintptr;
 #define PRI64													"lld"
@@ -246,16 +236,16 @@ typedef UINT_PTR        										uintptr;
 #define PRIzd													"ld"
 #define PRTime													PRI64
 #else
-//typedef int64_t													int64;
-//typedef int32_t													int32;
-//typedef int16_t													int16;
-//typedef int8_t													int8;
-//typedef uint64_t												uint64;
-//typedef uint32_t												uint32;
-//typedef uint16_t												uint16;
-//typedef uint8_t													uint8;
-//typedef uint16_t												WORD;
-//typedef uint32_t												DWORD;
+typedef int64_t													int64;
+typedef int32_t													int32;
+typedef int16_t													int16;
+typedef int8_t													int8;
+typedef uint64_t												uint64;
+typedef uint32_t												uint32;
+typedef uint16_t												uint16;
+typedef uint8_t													uint8;
+typedef uint16_t												WORD;
+typedef uint32_t												DWORD;
 
 #ifdef _LP64
 typedef int64													intptr;
@@ -326,8 +316,9 @@ typedef uint32													SPACE_ID;												// 一个space的id
 typedef uint32													CALLBACK_ID;											// 一个callback由CallbackMgr分配的id
 typedef uint64													COMPONENT_ID;											// 一个服务器组件的id
 typedef int32													COMPONENT_ORDER;										// 一个组件的启动顺序
+typedef int32													COMPONENT_GUS;											// 一个组件的genuuid_sections产生随机数的区间段
 typedef	uint32													TIMER_ID;												// 一个timer的id类型
-typedef uint8													MAIL_TYPE;												// mailbox 所投递的mail类别的类别
+typedef uint8													ENTITYCALL_CALL_TYPE;									// entityCall 所投递的call类别的类别
 typedef uint32													GAME_TIME;
 typedef uint32													GameTime;
 typedef int32													ScriptID;
@@ -457,45 +448,48 @@ typedef KBEUnordered_map< std::string, std::string >			SPACE_DATA;												//
 /* big endian macros go here */
 #endif
 
-//#if defined(_WIN32)
-//
+#if defined(_WIN32)
+
 #undef min
 #define min min
 #undef max
 #define max max
 
-	template <class T>
-	inline const T & lmin(const T & a, const T & b)
-	{
-		return b < a ? b : a;
-	}
+template <class T>
+inline const T & min( const T & a, const T & b )
+{
+	return b < a ? b : a;
+}
 
-	template <class T>
-	inline const T & lmax(const T & a, const T & b)
-	{
-		return a < b ? b : a;
-	}
+template <class T>
+inline const T & max( const T & a, const T & b )
+{
+	return a < b ? b : a;
+}
 
 #define KBE_MIN min
 #define KBE_MAX max
 
 #define NOMINMAX
 
-//#else
-//
-//#define KBE_MIN std::min
-//#define KBE_MAX std::max
-//
-//#endif
+#else
+
+#define KBE_MIN std::min
+#define KBE_MAX std::max
+
+#endif
 
 // 所有名称字符串的最大长度
 #define MAX_NAME 256	
 
 // ip字符串的最大长度
-#define MAX_IP 50
+#define MAX_IP 256
 
 // 常规的buf长度
 #define MAX_BUF 256
+
+// 常规的buf长度
+#define SQL_BUF 65535
 
 #ifndef MAX_PATH
 #define MAX_PATH 260
@@ -563,6 +557,9 @@ inline int32 getUserUID()
 	// Linux:
 		char * uid = getenv( "UID" );
 		iuid = uid ? atoi( uid ) : getuid();
+
+		char * uuid = getenv("UUID");
+		iuid = uuid ? atoi( uuid ) : iuid;
 #endif
 	}
 
@@ -574,12 +571,36 @@ inline const char * getUsername()
 {
 #if KBE_PLATFORM == PLATFORM_WIN32
 	DWORD dwSize = MAX_NAME;
+	wchar_t wusername[MAX_NAME];
+	::GetUserNameW(wusername, &dwSize);
+
 	static char username[MAX_NAME];
 	memset(username, 0, MAX_NAME);
-	::GetUserNameA(username, &dwSize);	
+
+	if (dwSize > 0)
+	{
+		size_t outsize = 0;
+
+		char* ptest = strutil::wchar2char((wchar_t*)&wusername, &outsize);
+
+		if (outsize == 0)
+		{
+			// 可能是中文名，不支持中文名称
+			strcpy(username, "error_name");
+		}
+		else
+		{
+			if(ptest)
+				kbe_snprintf(username, MAX_NAME, "%s", ptest);
+		}
+
+		if (ptest)
+			free(ptest);
+	}
+
 	return username;
 #else
-	char * pUsername = cuserid( NULL );
+	char * pUsername = cuserid(NULL);
 	return pUsername ? pUsername : "";
 #endif
 }
@@ -614,11 +635,69 @@ inline int32 getProcessPID()
 /** 获取2个系统时间差 */
 inline uint32 getSystemTimeDiff(uint32 oldTime, uint32 newTime)
 {
-    // getSystemTime() have limited data range and this is case when it overflow in this tick
+    // 防止getSystemTime()溢出的情况
     if (oldTime > newTime)
-        return (0xFFFFFFFF - oldTime) + newTime;
-    else
-        return newTime - oldTime;
+    {
+        return (uint32)((int64)0xFFFFFFFF + 1 - (int64)oldTime) + newTime;
+    }
+
+	return newTime - oldTime;
+}
+
+/* get system time */
+inline void kbe_timeofday(long *sec, long *usec)
+{
+#if defined(__unix)
+	struct timeval time;
+	gettimeofday(&time, NULL);
+	if (sec) *sec = time.tv_sec;
+	if (usec) *usec = time.tv_usec;
+#else
+	static long mode = 0, addsec = 0;
+	BOOL retval;
+	static int64 freq = 1;
+	int64 qpc;
+	if (mode == 0) {
+		retval = QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
+		freq = (freq == 0) ? 1 : freq;
+		retval = QueryPerformanceCounter((LARGE_INTEGER*)&qpc);
+		addsec = (long)time(NULL);
+		addsec = addsec - (long)((qpc / freq) & 0x7fffffff);
+		mode = 1;
+	}
+	retval = QueryPerformanceCounter((LARGE_INTEGER*)&qpc);
+	retval = retval * 2;
+	if (sec) *sec = (long)(qpc / freq) + addsec;
+	if (usec) *usec = (long)((qpc % freq) * 1000000 / freq);
+#endif
+}
+
+/* get clock in millisecond 64 */
+inline int64 kbe_clock64(void)
+{
+	long s, u;
+	int64 value;
+	kbe_timeofday(&s, &u);
+	value = ((int64)s) * 1000 + (u / 1000);
+	return value;
+}
+
+inline uint32 kbe_clock()
+{
+	return (uint32)(kbe_clock64() & 0xfffffffful);
+}
+
+/* get time in millisecond 64 */
+inline uint64 getTimeMs()
+{
+#if KBE_PLATFORM == PLATFORM_WIN32
+	auto timeNow = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+	return timeNow.count();
+#else
+	timeval time;
+	gettimeofday(&time, NULL);
+	return (uint64)((time.tv_sec * 1000) + (time.tv_usec / 1000));
+#endif
 }
 
 /* 产生一个64位的uuid 
@@ -626,17 +705,12 @@ inline uint32 getSystemTimeDiff(uint32 oldTime, uint32 newTime)
 extern COMPONENT_ORDER g_componentGlobalOrder;
 extern COMPONENT_ORDER g_componentGroupOrder;
 
-extern int32 g_genuuid_sections;
+extern COMPONENT_GUS g_genuuid_sections;
 
 inline uint64 genUUID64()
 {
-#if KBE_PLATFORM == PLATFORM_WIN32
 	static uint64 tv = (uint64)(time(NULL));
 	uint64 now = (uint64)(time(NULL));
-#else
-	static uint64 tv = (uint64)(getSystemTime() * 0.001f);
-	uint64 now = (uint64)(getSystemTime() * 0.001f);
-#endif
 
 	static uint16 lastNum = 0;
 
