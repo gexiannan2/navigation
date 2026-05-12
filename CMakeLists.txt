@@ -102,6 +102,10 @@ add_executable(navmesh_query_demo tools/navmesh_query_demo.cpp)
 target_include_directories(navmesh_query_demo PRIVATE .)
 target_link_libraries(navmesh_query_demo PRIVATE navigation)
 
+add_executable(navmesh_perf_bench tools/navmesh_perf_bench.cpp)
+target_include_directories(navmesh_perf_bench PRIVATE .)
+target_link_libraries(navmesh_perf_bench PRIVATE navigation)
+
 add_executable(navmesh_path_compare tools/navmesh_path_compare.cpp)
 target_include_directories(navmesh_path_compare PRIVATE .)
 target_link_libraries(navmesh_path_compare PRIVATE navigation)
