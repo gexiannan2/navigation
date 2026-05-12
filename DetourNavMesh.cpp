@@ -240,8 +240,8 @@ dtStatus dtNavMesh::init(const dtNavMeshParams* params)
 	m_posLookup = (dtMeshTile**)dtAlloc(sizeof(dtMeshTile*)*m_tileLutSize, DT_ALLOC_PERM);
 	if (!m_posLookup)
 		return DT_FAILURE | DT_OUT_OF_MEMORY;
-	memset(m_tiles, 0, sizeof(dtMeshTile)*m_maxTiles);
-	memset(m_posLookup, 0, sizeof(dtMeshTile*)*m_tileLutSize);
+	memset((void*)m_tiles, 0, sizeof(dtMeshTile)*m_maxTiles);
+	memset((void*)m_posLookup, 0, sizeof(dtMeshTile*)*m_tileLutSize);
 	m_nextFree = 0;
 	for (int i = m_maxTiles-1; i >= 0; --i)
 	{
@@ -254,10 +254,6 @@ dtStatus dtNavMesh::init(const dtNavMeshParams* params)
 #ifndef DT_POLYREF64
 	m_tileBits = dtIlog2(dtNextPow2((unsigned int)params->maxTiles));
 	m_polyBits = dtIlog2(dtNextPow2((unsigned int)params->maxPolys));
-
-    // Ensure that the bits of poly ref do not overflow.
-    dtAssert(m_tileBits + m_polyBits <= 31);
-
 	// Only allow 31 salt bits, since the salt mask is calculated using 32bit uint and it will overflow.
 	m_saltBits = dtMin((unsigned int)31, 32 - m_tileBits - m_polyBits);
 
@@ -336,7 +332,7 @@ int dtNavMesh::findConnectingPolys(const float* va, const float* vb,
 				continue;
 			
 			// Check if the segments touch.
-			calcSlabEndPoints(vc, vd, bmin, bmax, side);
+			calcSlabEndPoints(vc,vd, bmin,bmax, side);
 			
 			if (!overlapSlabs(amin,amax, bmin,bmax, 0.01f, tile->header->walkableClimb)) continue;
 			
@@ -437,8 +433,8 @@ void dtNavMesh::connectExtLinks(dtMeshTile* tile, dtMeshTile* target, int side)
 						float tmax = (neia[k*2+1]-va[2]) / (vb[2]-va[2]);
 						if (tmin > tmax)
 							dtSwap(tmin,tmax);
-						link->bmin = (unsigned char)roundf(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
-						link->bmax = (unsigned char)roundf(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
+						link->bmin = (unsigned char)(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
+						link->bmax = (unsigned char)(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
 					}
 					else if (dir == 2 || dir == 6)
 					{
@@ -446,8 +442,8 @@ void dtNavMesh::connectExtLinks(dtMeshTile* tile, dtMeshTile* target, int side)
 						float tmax = (neia[k*2+1]-va[0]) / (vb[0]-va[0]);
 						if (tmin > tmax)
 							dtSwap(tmin,tmax);
-						link->bmin = (unsigned char)roundf(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
-						link->bmax = (unsigned char)roundf(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
+						link->bmin = (unsigned char)(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
+						link->bmax = (unsigned char)(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
 					}
 				}
 			}
@@ -620,86 +616,63 @@ void dtNavMesh::baseOffMeshLinks(dtMeshTile* tile)
 	}
 }
 
-namespace
+void dtNavMesh::closestPointOnPoly(dtPolyRef ref, const float* pos, float* closest, bool* posOverPoly) const
 {
-void closestPointOnDetailEdges(const dtMeshTile* tile, const dtPoly* poly, const float* pos, float* closest, bool onlyBoundary)
-{
-	const unsigned int ip = (unsigned int)(poly - tile->polys);
-	const dtPolyDetail* pd = &tile->detailMeshes[ip];
-
-	float dmin = FLT_MAX;
-	float tmin = 0;
-	const float* pmin = 0;
-	const float* pmax = 0;
-
-	for (int i = 0; i < pd->triCount; i++)
-	{
-		const unsigned char* tris = &tile->detailTris[(pd->triBase + i) * 4];
-		const int ANY_BOUNDARY_EDGE =
-			(DT_DETAIL_EDGE_BOUNDARY << 0) | (DT_DETAIL_EDGE_BOUNDARY << 2) | (DT_DETAIL_EDGE_BOUNDARY << 4);
-		if (onlyBoundary && (tris[3] & ANY_BOUNDARY_EDGE) == 0)
-		{
-			continue;
-		}
-
-		const float* v[3];
-		for (int j = 0; j < 3; ++j)
-		{
-			if (tris[j] < poly->vertCount)
-			{
-				v[j] = &tile->verts[poly->verts[tris[j]] * 3];
-			}
-			else
-			{
-				v[j] = &tile->detailVerts[(pd->vertBase + (tris[j] - poly->vertCount)) * 3];
-			}
-		}
-
-		for (int k = 0, j = 2; k < 3; j = k++)
-		{
-			if ((dtGetDetailTriEdgeFlags(tris[3], j) & DT_DETAIL_EDGE_BOUNDARY) == 0 && (onlyBoundary || tris[j] < tris[k]))
-			{
-				// Only looking at boundary edges and this is internal, or
-				// this is an inner edge that we will see again or have already seen.
-				continue;
-			}
-
-			float t;
-			float d = dtDistancePtSegSqr2D(pos, v[j], v[k], t);
-			if (d < dmin)
-			{
-				dmin = d;
-				tmin = t;
-				pmin = v[j];
-				pmax = v[k];
-			}
-		}
-	}
-
-	dtVlerp(closest, pmin, pmax, tmin);
-}
-}
-
-bool dtNavMesh::getPolyHeight(const dtMeshTile* tile, const dtPoly* poly, const float* pos, float* height) const
-{
-	// Off-mesh connections do not have detail polys and getting height
-	// over them does not make sense.
+	const dtMeshTile* tile = 0;
+	const dtPoly* poly = 0;
+	getTileAndPolyByRefUnsafe(ref, &tile, &poly);
+	
+	// Off-mesh connections don't have detail polygons.
 	if (poly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
-		return false;
-
+	{
+		const float* v0 = &tile->verts[poly->verts[0]*3];
+		const float* v1 = &tile->verts[poly->verts[1]*3];
+		const float d0 = dtVdist(pos, v0);
+		const float d1 = dtVdist(pos, v1);
+		const float u = d0 / (d0+d1);
+		dtVlerp(closest, v0, v1, u);
+		if (posOverPoly)
+			*posOverPoly = false;
+		return;
+	}
+	
 	const unsigned int ip = (unsigned int)(poly - tile->polys);
 	const dtPolyDetail* pd = &tile->detailMeshes[ip];
 	
+	// Clamp point to be inside the polygon.
 	float verts[DT_VERTS_PER_POLYGON*3];	
+	float edged[DT_VERTS_PER_POLYGON];
+	float edget[DT_VERTS_PER_POLYGON];
 	const int nv = poly->vertCount;
 	for (int i = 0; i < nv; ++i)
 		dtVcopy(&verts[i*3], &tile->verts[poly->verts[i]*3]);
 	
-	if (!dtPointInPolygon(pos, verts, nv))
-		return false;
-
-	if (!height)
-		return true;
+	dtVcopy(closest, pos);
+	if (!dtDistancePtPolyEdgesSqr(pos, verts, nv, edged, edget))
+	{
+		// Point is outside the polygon, dtClamp to nearest edge.
+		float dmin = edged[0];
+		int imin = 0;
+		for (int i = 1; i < nv; ++i)
+		{
+			if (edged[i] < dmin)
+			{
+				dmin = edged[i];
+				imin = i;
+			}
+		}
+		const float* va = &verts[imin*3];
+		const float* vb = &verts[((imin+1)%nv)*3];
+		dtVlerp(closest, va, vb, edget[imin]);
+		
+		if (posOverPoly)
+			*posOverPoly = false;
+	}
+	else
+	{
+		if (posOverPoly)
+			*posOverPoly = true;
+	}
 	
 	// Find height at the location.
 	for (int j = 0; j < pd->triCount; ++j)
@@ -714,53 +687,12 @@ bool dtNavMesh::getPolyHeight(const dtMeshTile* tile, const dtPoly* poly, const 
 				v[k] = &tile->detailVerts[(pd->vertBase+(t[k]-poly->vertCount))*3];
 		}
 		float h;
-		if (dtClosestHeightPointTriangle(pos, v[0], v[1], v[2], h))
+		if (dtClosestHeightPointTriangle(closest, v[0], v[1], v[2], h))
 		{
-			*height = h;
-			return true;
+			closest[1] = h;
+			break;
 		}
 	}
-
-	// If all triangle checks failed above (can happen with degenerate triangles
-	// or larger floating point values) the point is on an edge, so just select
-	// closest. This should almost never happen so the extra iteration here is
-	// ok.
-	float closest[3];
-	closestPointOnDetailEdges(tile, poly, pos, closest, false);
-	*height = closest[1];
-	return true;
-}
-
-void dtNavMesh::closestPointOnPoly(dtPolyRef ref, const float* pos, float* closest, bool* posOverPoly) const
-{
-	const dtMeshTile* tile = 0;
-	const dtPoly* poly = 0;
-	getTileAndPolyByRefUnsafe(ref, &tile, &poly);
-
-	dtVcopy(closest, pos);
-	if (getPolyHeight(tile, poly, pos, &closest[1]))
-	{
-		if (posOverPoly)
-			*posOverPoly = true;
-		return;
-	}
-
-	if (posOverPoly)
-		*posOverPoly = false;
-
-	// Off-mesh connections don't have detail polygons.
-	if (poly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
-	{
-		const float* v0 = &tile->verts[poly->verts[0]*3];
-		const float* v1 = &tile->verts[poly->verts[1]*3];
-		float t;
-		dtDistancePtSegSqr2D(pos, v0, v1, t);
-		dtVlerp(closest, v0, v1, t);
-		return;
-	}
-
-	// Outside poly that is not an offmesh connection.
-	closestPointOnDetailEdges(tile, poly, pos, closest, true);
 }
 
 dtPolyRef dtNavMesh::findNearestPolyInTile(const dtMeshTile* tile,
@@ -920,13 +852,6 @@ dtStatus dtNavMesh::addTile(unsigned char* data, int dataSize, int flags,
 		return DT_FAILURE | DT_WRONG_MAGIC;
 	if (header->version != DT_NAVMESH_VERSION)
 		return DT_FAILURE | DT_WRONG_VERSION;
-
-#ifndef DT_POLYREF64
-	// Do not allow adding more polygons than specified in the NavMesh's maxPolys constraint.
-	// Otherwise, the poly ID cannot be represented with the given number of bits.
-	if (m_polyBits < dtIlog2(dtNextPow2((unsigned int)header->polyCount)))
-		return DT_FAILURE | DT_INVALID_PARAM;
-#endif
 		
 	// Make sure the location is free.
 	if (getTileAt(header->x, header->y, header->layer))

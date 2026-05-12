@@ -1,26 +1,8 @@
-/*
-This source file is part of KBEngine
-For the latest info, see http://www.kbengine.org/
-
-Copyright (c) 2008-2016 KBEngine.
-
-KBEngine is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-KBEngine is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
- 
-You should have received a copy of the GNU Lesser General Public License
-along with KBEngine.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Copyright 2008-2018 Yolo Technologies, Inc. All Rights Reserved. https://www.comblockengine.com
 
 #include "resmgr.h"
-//#include "helper/watcher.h"
-//#include "thread/threadguard.h"
+
+
 
 #if KBE_PLATFORM != PLATFORM_WIN32
 #include <unistd.h>
@@ -44,8 +26,8 @@ Resmgr::Resmgr():
 kb_env_(),
 respaths_(),
 isInit_(false),
-respool_()//,
-//mutex_()
+respool_(),
+mutex_()
 {
 }
 
@@ -58,9 +40,9 @@ Resmgr::~Resmgr()
 //-------------------------------------------------------------------------------------
 bool Resmgr::initializeWatcher()
 {
-//	WATCH_OBJECT("syspaths/KBE_ROOT", kb_env_.root);
-//	WATCH_OBJECT("syspaths/KBE_RES_PATH", kb_env_.res_path);
-//	WATCH_OBJECT("syspaths/KBE_BIN_PATH", kb_env_.bin_path);
+	WATCH_OBJECT("syspaths/KBE_ROOT", kb_env_.root_path);
+	WATCH_OBJECT("syspaths/KBE_RES_PATH", kb_env_.res_path);
+	WATCH_OBJECT("syspaths/KBE_BIN_PATH", kb_env_.bin_path);
 	return true;
 }
 
@@ -75,16 +57,16 @@ void Resmgr::autoSetPaths()
 	std::string s = path;
 	size_t pos1;
 
-	pos1 = s.find("\\kbe\\bin\\");
-	if(pos1 == std::string::npos)
-		pos1 = s.find("/kbe/bin/");
+	strutil::kbe_replace(s, "\\", "/");
+	strutil::kbe_replace(s, "//", "/");
+	pos1 = s.find("/kbe/bin/");
 
 	if(pos1 == std::string::npos)
 		return;
 
 	s = s.substr(0, pos1 + 1);
-	kb_env_.root = s;
-	kb_env_.res_path = kb_env_.root + "kbe/res/;" + kb_env_.root + "/assets/;" + kb_env_.root + "/assets/scripts/;" + kb_env_.root + "/assets/res/";
+	kb_env_.root_path = s;
+	kb_env_.res_path = kb_env_.root_path + "kbe/res/;" + kb_env_.root_path + "/assets/;" + kb_env_.root_path + "/assets/scripts/;" + kb_env_.root_path + "/assets/res/";
 }
 
 //-------------------------------------------------------------------------------------
@@ -92,14 +74,14 @@ void Resmgr::updatePaths()
 {
 	char ch;
 	
-	if(kb_env_.root.size() > 0)
+	if (kb_env_.root_path.size() > 0)
 	{
-		ch =  kb_env_.root.at(kb_env_.root.size() - 1);
+		ch = kb_env_.root_path.at(kb_env_.root_path.size() - 1);
 		if(ch != '/' && ch != '\\')
-			kb_env_.root += "/";
+			kb_env_.root_path += "/";
 
-		strutil::kbe_replace(kb_env_.root, "\\", "/");
-		strutil::kbe_replace(kb_env_.root, "//", "/");
+		strutil::kbe_replace(kb_env_.root_path, "\\", "/");
+		strutil::kbe_replace(kb_env_.root_path, "//", "/");
 	}
 
 	if(kb_env_.bin_path.size() > 0)
@@ -117,7 +99,7 @@ void Resmgr::updatePaths()
 	char splitFlag = ';';
 	strutil::kbe_split<char>(tbuf, splitFlag, respaths_);
 
-	// windowsï¿½Ã»ï¿½ï¿½ï¿½ï¿½Ü·Ö¸ï¿½Ã°ï¿½Å£ï¿½ ï¿½ï¿½ï¿½Ü»ï¿½ï¿½ï¿½Ì·ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½
+	// windowsÓÃ»§²»ÄÜ·Ö¸îÃ°ºÅ£¬ ¿ÉÄÜ»á°ÑÅÌ·û¸ø·Ö¸îÁË
 #if KBE_PLATFORM != PLATFORM_WIN32
 	if(respaths_.size() < 2)
 	{
@@ -154,31 +136,31 @@ bool Resmgr::initialize()
 	//if(isInit())
 	//	return true;
 
-	// ï¿½ï¿½È¡ï¿½ï¿½ï¿½æ»·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	/*kb_env_.root			= getenv("KBE_ROOT") == NULL ? "" : getenv("KBE_ROOT");
+	// »ñÈ¡ÒýÇæ»·¾³ÅäÖÃ
+	kb_env_.root_path		= getenv("KBE_ROOT") == NULL ? "" : getenv("KBE_ROOT");
 	kb_env_.res_path		= getenv("KBE_RES_PATH") == NULL ? "" : getenv("KBE_RES_PATH"); 
-	kb_env_.bin_path		= getenv("KBE_BIN_PATH") == NULL ? "" : getenv("KBE_BIN_PATH"); */
+	kb_env_.bin_path		= getenv("KBE_BIN_PATH") == NULL ? "" : getenv("KBE_BIN_PATH"); 
 
-	kb_env_.root			= "/";
-	kb_env_.res_path		= "/"; 
-	kb_env_.bin_path		= "/"; 
-	
-	//kb_env_.root = "E:/Game/kbengine-0.6.5";
-	//kb_env_.res_path ="E:/Game/kbengine-0.6.5/kbe/res/;E:/Game/kbengine-0.6.5/kbengine_demos_assets/;E:/Game/kbengine-0.6.5/kbengine_demos_assets/scripts/;E:/Game/kbengine-0.6.5/kbengine_demos_assets/scripts/res/";
-	//kb_env_.bin_path ="E:/Game/kbengine-0.6.5/kbe/bin/server/";
-	//
+	//kb_env_.root			= "/home/kbengine/";
+	//kb_env_.res_path		= "/home/kbengine/kbe/res/;/home/kbengine/assets/;/home/kbengine/assets/scripts/;/home/kbengine/assets/res/"; 
+	//kb_env_.bin_path		= "/home/kbengine/kbe/bin/server/"; 
 	updatePaths();
 
-	if(kb_env_.root == "" || kb_env_.res_path == "")
+	if (kb_env_.root_path == "" || kb_env_.res_path == "")
 		autoSetPaths();
 
 	updatePaths();
+
 	if(getPySysResPath() == "" || getPyUserResPath() == "" || getPyUserScriptsPath() == "")
 	{
-		printf("[ERROR] Resmgr::initialize: not set environment, (KBE_ROOT, KBE_RES_PATH, KBE_BIN_PATH) invalid!\n");
+		if (UNKNOWN_COMPONENT_TYPE != g_componentType && g_componentType != TOOL_TYPE)
+		{
+			printf("[ERROR] Resmgr::initialize: not set environment, (KBE_ROOT=%s, KBE_RES_PATH=%s, KBE_BIN_PATH=%s) invalid!\n",
+				kb_env_.root_path.c_str(), kb_env_.res_path.c_str(), kb_env_.bin_path.c_str());
 #if KBE_PLATFORM == PLATFORM_WIN32
-		::MessageBoxW(0, L"Resmgr::initialize: not set environment, (KBE_ROOT, KBE_RES_PATH, KBE_BIN_PATH) invalid!\n", L"ERROR", MB_ICONERROR);
+			::MessageBox(0, L"Resmgr::initialize: not set environment, (KBE_ROOT, KBE_RES_PATH, KBE_BIN_PATH) invalid!\n", L"ERROR", MB_ICONERROR);
 #endif
+		}
 	}
 
 	isInit_ = true;
@@ -190,12 +172,12 @@ bool Resmgr::initialize()
 //-------------------------------------------------------------------------------------
 void Resmgr::print(void)
 {
-	//INFO_MSG(fmt::format("Resmgr::initialize: KBE_ROOT={0}\n", kb_env_.root));
-	//INFO_MSG(fmt::format("Resmgr::initialize: KBE_RES_PATH={0}\n", kb_env_.res_path));
-	//INFO_MSG(fmt::format("Resmgr::initialize: KBE_BIN_PATH={0}\n", kb_env_.bin_path));
+	INFO_MSG(fmt::format("Resmgr::initialize: KBE_ROOT={0}\n", kb_env_.root_path));
+	INFO_MSG(fmt::format("Resmgr::initialize: KBE_RES_PATH={0}\n", kb_env_.res_path));
+	INFO_MSG(fmt::format("Resmgr::initialize: KBE_BIN_PATH={0}\n", kb_env_.bin_path));
 
 #if KBE_PLATFORM == PLATFORM_WIN32
-	printf("%s", fmt::format("KBE_ROOT = {0}\n", kb_env_.root).c_str());
+	printf("%s", fmt::format("KBE_ROOT = {0}\n", kb_env_.root_path).c_str());
 	printf("%s", fmt::format("KBE_RES_PATH = {0}\n", kb_env_.res_path).c_str());
 	printf("%s", fmt::format("KBE_BIN_PATH = {0}\n", kb_env_.bin_path).c_str());
 	printf("\n");
@@ -220,10 +202,8 @@ std::string Resmgr::matchRes(const char* res)
 		strutil::kbe_replace(fpath, "\\", "/");
 		strutil::kbe_replace(fpath, "//", "/");
 
-		FILE * f = fopen (fpath.c_str(), "r");
-		if(f != NULL)
+		if (access(fpath.c_str(), 0) == 0)
 		{
-			fclose(f);
 			return fpath;
 		}
 	}
@@ -243,10 +223,8 @@ bool Resmgr::hasRes(const std::string& res)
 		strutil::kbe_replace(fpath, "\\", "/");
 		strutil::kbe_replace(fpath, "//", "/");
 
-		FILE * f = fopen (fpath.c_str(), "r");
-		if(f != NULL)
+		if (access(fpath.c_str(), 0) == 0)
 		{
-			fclose(f);
 			return true;
 		}
 	}
@@ -281,7 +259,7 @@ bool Resmgr::listPathRes(std::wstring path, const std::wstring& extendName, std:
 {
 	if(path.size() == 0)
 	{
-		//ERROR_MSG("Resmgr::listPathRes: open dir [NULL] error!\n");
+		ERROR_MSG("Resmgr::listPathRes: open dir [NULL] error!\n");
 		return false;
 	}
 
@@ -295,30 +273,31 @@ bool Resmgr::listPathRes(std::wstring path, const std::wstring& extendName, std:
 	struct dirent *filename;
 	DIR *dir;
 
-    char* cpath = strutil::wchar2char(path.c_str());
-    char pathstr[MAX_PATH];
-    strcpy(pathstr, cpath);
-    free(cpath);
+	char* cpath = strutil::wchar2char(path.c_str());
+	char pathstr[MAX_PATH];
+	strcpy(pathstr, cpath);
+	free(cpath);
 
 	dir = opendir(pathstr);
-	if(dir == NULL)
+	if (dir == NULL)
 	{
-		//ERROR_MSG(fmt::format("Resmgr::listPathRes: open dir [{}] error!\n", pathstr));
+		ERROR_MSG(fmt::format("Resmgr::listPathRes: open dir [{}] error!\n", pathstr));
 		return false;
 	}
 
-	while((filename = readdir(dir)) != NULL)
+	while ((filename = readdir(dir)) != NULL)
 	{
-		if(strcmp(filename->d_name, ".") == 0 || strcmp(filename->d_name, "..") == 0)
+		if (strcmp(filename->d_name, ".") == 0 || strcmp(filename->d_name, "..") == 0)
 			continue;
 
 		struct stat s;
-		std::string pathstrtmp = std::string(pathstr) + filename->d_name;
-		lstat(pathstrtmp.c_str(), &s);
+		char pathstrtmp[MAX_PATH * 2];
+		sprintf(pathstrtmp, "%s%s", pathstr, filename->d_name);
+		lstat(pathstrtmp, &s);
 
-		if(S_ISDIR(s.st_mode))
+		if (S_ISDIR(s.st_mode))
 		{
-			wchar_t* wstr = strutil::char2wchar(pathstrtmp.c_str());
+			wchar_t* wstr = strutil::char2wchar(pathstrtmp);
 			listPathRes(wstr, extendName, results);
 			free(wstr);
 		}
@@ -326,20 +305,20 @@ bool Resmgr::listPathRes(std::wstring path, const std::wstring& extendName, std:
 		{
 			wchar_t* wstr = strutil::char2wchar(filename->d_name);
 
-			if(extendName.size() == 0 || extendName == L"*" || extendName == L"*.*")
+			if (extendName.size() == 0 || extendName == L"*" || extendName == L"*.*")
 			{
 				results.push_back(path + wstr);
 			}
 			else
 			{
-				if(extendNames.size() > 0)
+				if (extendNames.size() > 0)
 				{
 					std::vector<std::wstring> vec;
 					strutil::kbe_split<wchar_t>(wstr, L'.', vec);
 
-					for(size_t ext = 0; ext < extendNames.size(); ++ext)
+					for (size_t ext = 0; ext < extendNames.size(); ++ext)
 					{
-						if(extendNames[ext].size() > 0 && vec.size() > 1 && vec[vec.size() - 1] == extendNames[ext])
+						if (extendNames[ext].size() > 0 && vec.size() > 1 && vec[vec.size() - 1] == extendNames[ext])
 						{
 							results.push_back(path + wstr);
 						}
@@ -359,15 +338,15 @@ bool Resmgr::listPathRes(std::wstring path, const std::wstring& extendName, std:
 
 #else
 	wchar_t szFind[MAX_PATH];
-	WIN32_FIND_DATAW FindFileData;
+	WIN32_FIND_DATA FindFileData;
 	wcscpy(szFind, path.c_str());
 	wcscat(szFind, L"*");
 	
-	HANDLE hFind = FindFirstFileW(szFind, &FindFileData);
+	HANDLE hFind = FindFirstFile(szFind, &FindFileData);
 	if(INVALID_HANDLE_VALUE == hFind)
 	{
 		char* cstr = strutil::wchar2char(path.c_str());
-	//	ERROR_MSG(fmt::format("Resmgr::listPathRes: open dir [{}] error!\n", cstr));
+		ERROR_MSG(fmt::format("Resmgr::listPathRes: open dir [{}] error!\n", cstr));
 		free(cstr);
 		return false;
 	}
@@ -412,7 +391,7 @@ bool Resmgr::listPathRes(std::wstring path, const std::wstring& extendName, std:
 			}
 		}
 
-		if(!FindNextFileW(hFind, &FindFileData))
+		if(!FindNextFile(hFind, &FindFileData))
 			break;
 	}
 
@@ -461,9 +440,9 @@ std::string Resmgr::getPySysResPath()
 
 	if(respath == "")
 	{
-		respath = matchRes("server/kbengine_defs.xml");
+		respath = matchRes("server/kbengine_defaults.xml");
 		std::vector<std::string> tmpvec;
-		tmpvec = KBEngine::strutil::kbe_splits(respath, "server/kbengine_defs.xml");
+		KBEngine::strutil::kbe_splits(respath, "server/kbengine_defaults.xml", tmpvec);
 
 		if(tmpvec.size() > 1)
 		{
@@ -488,7 +467,7 @@ std::string Resmgr::getPyUserResPath()
 	{
 		respath = matchRes("server/kbengine.xml");
 		std::vector<std::string> tmpvec;
-		tmpvec = KBEngine::strutil::kbe_splits(respath, "server/kbengine.xml");
+		KBEngine::strutil::kbe_splits(respath, "server/kbengine.xml", tmpvec);
 
 		if(tmpvec.size() > 1)
 		{
@@ -511,34 +490,79 @@ std::string Resmgr::getPyUserScriptsPath()
 {
 	static std::string path = "";
 
-	if(path == "")
+	if (path == "")
 	{
-		std::string entitiesxml = "entities.xml";
-		path = matchRes(entitiesxml);
+		path = getPyUserResPath();
 
-		if(path == entitiesxml)
+		std::string::size_type pos = path.rfind("res");
+		path.erase(pos, path.size() - pos);
+		path += "scripts/";
+	}
+
+	return path;
+}
+
+//-------------------------------------------------------------------------------------
+std::string Resmgr::getPyUserComponentScriptsPath(COMPONENT_TYPE componentType)
+{
+	if (componentType == UNKNOWN_COMPONENT_TYPE)
+	{
+		static std::string path = "";
+
+		if (path == "")
 		{
-			entitiesxml = "scripts/" + entitiesxml;
-			path = matchRes(entitiesxml);
-			entitiesxml = "entities.xml";
+			path = getPyUserScriptsPath();
+
+			if (g_componentType == CELLAPP_TYPE)
+				path += "cell/";
+			else if (g_componentType == BASEAPP_TYPE)
+				path += "base/";
+			else if (g_componentType == BOTS_TYPE)
+				path += "bots/";
+			else if (g_componentType == CLIENT_TYPE)
+				path += "client/";
+			else
+				KBE_ASSERT(false);
 		}
 
+		return path;
+	}
+	else
+	{
+		std::string path = "";
 
-		std::vector<std::string> tmpvec;
-		tmpvec = KBEngine::strutil::kbe_splits(path, entitiesxml);
-		if(tmpvec.size() > 1)
+		if (path == "")
 		{
-			path = tmpvec[0];
+			path = getPyUserScriptsPath();
+
+			if (componentType == CELLAPP_TYPE)
+				path += "cell/";
+			else if (componentType == BASEAPP_TYPE)
+				path += "base/";
+			else if (componentType == BOTS_TYPE)
+				path += "bots/";
+			else if (componentType == CLIENT_TYPE)
+				path += "client/";
+			else
+				KBE_ASSERT(false);
 		}
-		else
-		{
-			if(respaths_.size() > 2)
-				path = respaths_[2];
-			else if(respaths_.size() > 1)
-				path = respaths_[1];
-			else if(respaths_.size() > 0)
-				path = respaths_[0];
-		}
+
+		return path;
+	}
+
+	return "";
+}
+
+//-------------------------------------------------------------------------------------
+std::string Resmgr::getPyUserAssetsPath()
+{
+	static std::string path = "";
+
+	if (path == "")
+	{
+		path = getPyUserScriptsPath();
+		strutil::kbe_replace(path, "/scripts", "");
+		strutil::kbe_replace(path, "\\scripts", "");
 	}
 
 	return path;
@@ -554,7 +578,7 @@ ResourceObjectPtr Resmgr::openResource(const char* res, const char* model, uint3
 		return new FileObject(respath.c_str(), flags, model);
 	}
 
-	//KBEngine::thread::ThreadGuard tg(&mutex_); 
+	KBEngine::thread::ThreadGuard tg(&mutex_); 
 	KBEUnordered_map< std::string, ResourceObjectPtr >::iterator iter = respool_.find(respath);
 	if(iter == respool_.end())
 	{
@@ -571,7 +595,7 @@ ResourceObjectPtr Resmgr::openResource(const char* res, const char* model, uint3
 //-------------------------------------------------------------------------------------
 void Resmgr::update()
 {
-//	KBEngine::thread::ThreadGuard tg(&mutex_); 
+	KBEngine::thread::ThreadGuard tg(&mutex_); 
 	KBEUnordered_map< std::string, ResourceObjectPtr >::iterator iter = respool_.begin();
 	for(; iter != respool_.end();)
 	{
@@ -594,3 +618,5 @@ void Resmgr::handleTimeout(TimerHandle handle, void * arg)
 
 //-------------------------------------------------------------------------------------		
 }
+
+

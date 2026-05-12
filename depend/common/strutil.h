@@ -136,6 +136,11 @@ namespace strutil {
 
     std::vector< std::string > kbe_splits(const std::string& s, const std::string& delim, const bool keep_empty = true);
 
+	inline void kbe_splits(const std::string& s, const std::string& delim, std::vector< std::string >& out)
+	{
+		out = kbe_splits(s, delim, true);
+	}
+
 	int bytes2string(unsigned char *pSrc, int nSrcLen, unsigned char *pDst, int nDstMaxLen);
 	int string2bytes(unsigned char* szSrc, unsigned char* pDst, int nDstMaxLen);
 	  
@@ -224,4 +229,5 @@ namespace strutil {
 }
 
 #endif // KBE_STRUTIL_H
+
 
